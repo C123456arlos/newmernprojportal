@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Quill from 'quill'
 import { JobCategories, JobLocations } from '../assets/assets'
+import axios from 'axios'
+import { useContext } from 'react'
+import { AppContext } from '../context/AppContext'
+import { toast } from 'react-toastify'
 const AddJob = () => {
     const [title, setTitle] = useState('')
     const [location, setLocation] = useState('New York')
@@ -9,6 +13,24 @@ const AddJob = () => {
     const [salary, setSalary] = useState(0)
     const editorRef = useRef(null)
     const quillRef = useRef(null)
+    const {backendUrl, companyToken}= useContext(AppContext)
+    const onSubmitHandler = async (e) => {
+        e.preventDefault()
+        try {
+            const description = quillRef.current.root.innerHTML
+            const { data } = await axios.post(backendUrl + '/api/company/post-job', { title,category, description, location, salary, level }, { headers: { token: companyToken } })
+            if (data.success) {
+                toast.success(data.message)
+                setTitle('')
+                setSalary(0)
+                quillRef.current.root.innerHTML= ''
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
     useEffect(() => {
         if (!quillRef.current && editorRef.current) {
             quillRef.current = new Quill(editorRef.current, {
@@ -17,7 +39,7 @@ const AddJob = () => {
         }
     },[])
     return (
-        <form className='container p-4 flex flex-col w-full items-start gap-3'>
+        <form onSubmit={onSubmitHandler} className='container p-4 flex flex-col w-full items-start gap-3'>
             <div className='w-full'>
                 <p className='mb-2'>job title</p>
                 <input type='text' placeholder='type here' onChange={e => setTitle(e.target.value)} value={title} 
@@ -51,7 +73,7 @@ const AddJob = () => {
                     <p className='mb-2'>job level</p>
                     <select  className='w-full px-3 py-2 border-2 border-gray-300 rounded'  onChange={e => setLevel(e.target.value)}>
                         <option value={'Beginner level'}>beginner level</option>
-                        <option value={'Intermediat level'}>intermediate level</option>
+                        <option value={'Intermediate level'}>intermediate level</option>
                         <option value={'Senior level'}>senior level</option>
             </select>
                 </div>
