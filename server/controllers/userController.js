@@ -1,64 +1,460 @@
-import Job from "../models/Job.js"
-import JobApplication from "../models/JobApplication.js"
-import User from "../models/User.js"
-import {v2 as cloudinary} from 'cloudinary'
-
+import Course from '../models/Course.js'
+import { CourseProgress } from '../models/CourseProgress.js'
+import { Purchase } from "../models/Purchase.js"
+import { User } from "../models/User.js"
+import Stripe from 'stripe'
 export const getUserData = async (req, res) => {
-    const userId = req.auth().userId
     try {
-        const user = await User.findById(userId)
+        const clerkId = req.auth.userId
+        const userId = await User.findOne({clerkId})
+        
+        const id = userId._id
+        
+        // console.log(req.auth)
+        // console.log('courseData', course)
+        // console.log('userId', userId)
+        // const user = await User.findOne({userId})
+        const user = await User.findById(id)
+        // const course = await Course.findById('6ae8f4d32d2bb7ac2eccef78')
+        // console.log('course', course)
+        
         if (!user) {
             return res.json({success:false, message:'user not found'})
         }
         res.json({success:true, user})
     } catch (error) {
-        res.json({success:false, message:error.message})
+        res.json({success:false, messge:error.message})
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    // try {
+    //     const courses = await Course.find({ isPublished: true }).populate({path:'educator'})
+    //     .select(['-courseContent', '-enrolledStudents'])
+    //     // // const courses = await Course.findOne({ coursePrice: 0 })
+    //     // const users = await Course.updateMany({}, {
+    //     //     $set: {
+    //     //         educator:
+    //     //         {
+    //     //             x: 1, test: 0 
+                        
+    //     //             }
+    //     //     }
+    //     // })
+
+    //     const educatorId = req.auth.userId
+    //     const user = await User.findOne({ educatorId })
+    //      await Course.updateMany({}, {
+    //         $set: {
+    //             educator: {
+    //                 email: user.email, name: user.name,
+    //                 imageUrl: user.image,
+    //                 enrolledCourses: {}
+    //                 // enrolledCourses: {course:1, lecture:1, chapter:1}
+    //     } } })
+        
+    //     console.log(user)
+
+    //     res.json({success:true, courses})
+    // } catch (error) {
+    //     res.json({success:false, message:error.message})
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // try {
+    //     console.log(req.auth)
+    //     const userId = req.auth.userId
+    //     const user = await User.findById(userId)
+    //     // const user = await User.findById(clerkId)
+    //     if (!user) {
+    //         return res.json({success:false, message:'user not found'})
+    //     }
+    //     res.json({success:true, user})
+    // } catch (error) {
+    //     res.json({success:false, messge:error.message})
+    // }
+        // const educatorId = req.auth.userId
+        // const user = await User.findOne({ educatorId })
+        // console.log('userData',user)
+    const educatorId = req.auth.userId
+    const user = await User.findOne({ educatorId })
+    //   if (!user) {
+    //         return res.json({success:false, message:'user not found'})
+    // }
+    //  res.json({success:true, user})
 }
-export const applyForJob = async (req, res) => {
-    const { jobId } = req.body
-    const userId = req.auth().userId
+export const userEnrolledCourses = async (req, res) => {
     try {
-        const isAlreadyApplied = await JobApplication.find({ jobId, userId })
-        if (isAlreadyApplied.length > 0) {
-            return res.json({success:false, message:'already applied'})
-        }
-        const jobData = await Job.findById(jobId)
-        if (!jobData) {
-            return res.json({ success: false, message:'job not found'})
-        }
-        await JobApplication.create({ companyId: jobData.companyId, userId, jobId, date: Date.now() })
-        res.json({success:true, message:'applied successfully'})
+        const userId = req.auth.userId
+        
+        const userData = await User.findById({userId})
+        // const userData = await User.findById(userId).populate('enrolledCourses')
+        res.json({success:true, enrolledCourses:userData.enrolledCourses})
     } catch (error) {
         res.json({success:false, message:error.message})
     }
 }
-export const getUserJobApplications = async (req, res) => {
-   try {
-       const userId = req.auth().userId
-       const applications = await JobApplication.find({ userId })
-           .populate('companyId', 'name email image').populate('jobId', 'title description location category level salary')
-           .exec()
-       if (!applications) {
-           return res.json({success:false, message:'no job applications found for this user'})
-       }
-       return res.json({success:true, applications})
-   } catch (error) {
+// import { User } from "../models/User.js"
+
+// export const getUserData = async (req, res) => {
+//     // try {
+//     //     console.log(req.auth)
+//     const userId = req.auth.userId
+//     console.log('userId',userId)
+//     //     const user = await User.findById(userId)
+//     //     // const user = await User.findById(clerkId)
+//     //     if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     //     }
+//     //     res.json({success:true, user})
+//     // } catch (error) {
+//     //     res.json({success:false, messge:error.message})
+//     // }
+//     // try {
+//     //     console.log(req.auth)
+//     //     const userId = req.auth.userId
+//     //     const user = await User.findById(userId)
+//     //     // const user = await User.findById(clerkId)
+//     //     if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     //     }
+//     //     res.json({success:true, user})
+//     // } catch (error) {
+//     //     res.json({success:false, messge:error.message})
+//     // }
+//         // const educatorId = req.auth.userId
+//         // const user = await User.findOne({ educatorId })
+//         // console.log('userData',user)
+//     // const educatorId = req.auth.userId
+//     // const user = await User.findOne({ educatorId })
+    
+//     //   if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     // }
+//     //  res.json({success:true, user})
+//     //     const  userId  = req.auth.userId
+//     // console.log('userId', userId)
+// }
+// export const userEnrolledCourses = async (req, res) => {
+//     try {
+//             const educatorId = req.auth.userId
+//     const userData = await User.findOne({ educatorId })
+//         res.json({ success: true, enrolledCourses: userData.enrolledCourses })
+//     } catch (error) {
+//         res.json({success:false, message:error.message})
+//     }
+//     // try {
+//     //     const userId = req.auth.userId
+//     //     const userData = await User.findById(userId)
+//     //         // .populate('enrolledCourses')
+//     //     res.json({success:true, enrolledCourses:userData.enrolledCourses})
+//     // } catch (error) {
+//     //     res.json({success:false, message:error.message})
+//     // }
+// }
+export const purchaseCourse = async (req, res) => {
+    try {
+        const { courseId } = req.body
+        const { origin } = req.headers
+        const clerkUserId = req.auth.userId
+        const user = await User.findOne({ clerkUserId })
+        const id = user._id.toString('')
+        const userData = await User.findById(id)
+        const courseData = await Course.findById(courseId)
+        if (!userData || !courseData) {
+            return res.json({success:false, message:'data not found'})
+        }
+        const purchaseData = {
+            courseId: courseData._id,
+            userId:clerkUserId,
+            amount: (courseData.coursePrice - courseData.discount * courseData.coursePrice / 100).toFixed(2)
+        }
+        const newPurchase = await Purchase.create(purchaseData)
+        const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
+        const currency = process.env.CURRENCY.toLowerCase()
+        const purchaseDataNew = await Purchase.findById(newPurchase._id.toString())
+        console.log(purchaseDataNew.userId)
+        const line_items = [{
+            price_data: {
+                currency,
+                product_data: {
+                    name: courseData.courseTitle
+                },
+                unit_amount:200
+                // unit_amount: Math.floor(newPurchase.amount) * 100
+            },
+            quantity:1
+        }]
+
+    
+
+        
+        
+        const session = await stripeInstance.checkout.sessions.create({
+            success_url: `${origin}/loading/my-enrollments`,
+            cancel_url: `${origin}/`,
+            line_items: line_items,
+            mode: 'payment',
+            metadata: {
+                purchaseId:newPurchase._id.toString()
+            }
+        })
+        res.json({success:true, session_url:session.url})
+    } catch (error) {
+        res.json({success:false, error:error.message})
+    }
+}
+
+export const updateUserCourseProgress = async(req, res)=> {
+    try {
+        const userId = req.auth.userId
+        const { courseId, lectureId } = req.body
+        const progressData = await CourseProgress.findOne({ userId, courseId })
+        if (progressData) {
+            if (progressData.lectureCompleted.includes(lectureId)) {
+              return res.json({sucess:true, message:'lecture already completed'})
+            }
+            progressData.lectureCompleted.push(lectureId)
+            await progressData.save()
+        } else {
+            await CourseProgress.create({
+                userId, courseId, lectureCompleted:[lectureId]
+            })
+        }
+        res.json({sucecss:true, message:'progress updated'})
+    } catch (error) {
     res.json({success:false, message:error.message})
-   } 
+    }
 }
-export const updateUserResume = async (req, res) => {
+
+export const getUserCourseProgress = async (req, res) => {
     try {
-        const userId = req.auth().userId
-        const resumeFile = req.file
-        const userData = await User.findById(userId)
-        if (resumeFile) {
-            const resumeUpload = await cloudinary.uploader.upload(resumeFile.path)
-            userData.resume=resumeUpload.secure_url
-        }
-        await userData.save()
-        return res.json({success:true, message:'resume updated'})
+        const userId = req.auth.userId
+        const { courseId, lectureId } = req.body
+        const progressData = await CourseProgress.findOne((userId, courseId))
+        res.json({success:true, progressData})
     } catch (error) {
         res.json({success:false, message:error.message})
     }
 }
+export const addUserRating = async (req, res) => {
+    const userId = req.auth.userId
+    const { courseId, rating } = req.body
+    if (!courseId || !userId || !rating || rating < 1 || rating > 5) {
+        return res.json({success:false, message:'invalid details'})
+    }
+    try {
+        const course = await Course.findById(courseId)
+        if (!course) {
+            return res.json({success:false, message:'course not found'})
+        }
+        const user = await User.findById(userId)
+        if (!user || !user.enrolledCourses.includes(courseId)) {
+            return res.json({success:false, message:'user has not purchased this course'})
+        }
+        const existingRatingIndex = course.courseRating.findIndex(r => rating.userId === userId)
+        if (existingRatingIndex > -1) {
+            course.courseRating[existingRatingIndex].rating= rating
+        } else {
+            course.courseRating.push({userId, rating})
+        }
+        await course.save()
+        return res.json({success:true, message:'rating added'})
+    } catch (error) {
+        return res.json({ success:false, message:error.message})
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// export const getUserData = async (req, res) => {
+//     try {
+//         const clerkId = req.auth.userId
+//         const userId = await User.findOne({clerkId})
+//         console.log('id', userId)
+//         const id = userId._id
+//         console.log('id', id)
+//         // console.log(req.auth)
+//         // console.log('courseData', course)
+//         // console.log('userId', userId)
+//         // const user = await User.findOne({userId})
+//         // const user = await User.findById()
+//         const user = await User.findById(id)
+//         if (!user) {
+//             return res.json({success:false, message:'user not found'})
+//         }
+//         res.json({success:true, user})
+//     } catch (error) {
+//         res.json({success:false, messge:error.message})
+//     }
+//     // try {
+//     //     console.log(req.auth)
+//     //     const userId = req.auth.userId
+//     //     const user = await User.findById(userId)
+//     //     // const user = await User.findById(clerkId)
+//     //     if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     //     }
+//     //     res.json({success:true, user})
+//     // } catch (error) {
+//     //     res.json({success:false, messge:error.message})
+//     // }
+//         // const educatorId = req.auth.userId
+//         // const user = await User.findOne({ educatorId })
+//         // console.log('userData',user)
+//     const educatorId = req.auth.userId
+//     const user = await User.findOne({ educatorId })
+//     //   if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     // }
+//     //  res.json({success:true, user})
+// }
+
+
+
+
+
+
+
+// export const getUserData = async (req, res) => {
+//     // try {
+//     //     const clerkId = req.auth.userId
+//     //     const userId = await User.findOne({clerkId})
+//     //     console.log('id', userId)
+//     //     const id = userId._id
+//     //     console.log('id', id)
+//     //     // console.log(req.auth)
+//     //     // console.log('courseData', course)
+//     //     // console.log('userId', userId)
+//     //     // const user = await User.findOne({userId})
+//     //     const user = await User.findById(id)
+//     //     if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     //     }
+//     //     res.json({success:true, user})
+//     // } catch (error) {
+//     //     res.json({success:false, messge:error.message})
+//     // }
+
+
+
+
+
+
+
+
+
+
+
+
+//     try {
+//         const courses = await Course.find({ isPublished: true }).populate({path:'educator'})
+//         .select(['-courseContent', '-enrolledStudents'])
+//         // // const courses = await Course.findOne({ coursePrice: 0 })
+//         // const users = await Course.updateMany({}, {
+//         //     $set: {
+//         //         educator:
+//         //         {
+//         //             x: 1, test: 0 
+                        
+//         //             }
+//         //     }
+//         // })
+
+//         const educatorId = req.auth.userId
+//         const user = await User.findOne({ educatorId })
+//          await Course.updateMany({}, {
+//             $set: {
+//                 educator: {
+//                     email: user.email, name: user.name,
+//                     imageUrl: user.image,
+//                     enrolledCourses: {}
+//                     // enrolledCourses: {course:1, lecture:1, chapter:1}
+//         } } })
+        
+//         console.log(user)
+
+//         res.json({success:true, courses})
+//     } catch (error) {
+//         res.json({success:false, message:error.message})
+//     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//     // try {
+//     //     console.log(req.auth)
+//     //     const userId = req.auth.userId
+//     //     const user = await User.findById(userId)
+//     //     // const user = await User.findById(clerkId)
+//     //     if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     //     }
+//     //     res.json({success:true, user})
+//     // } catch (error) {
+//     //     res.json({success:false, messge:error.message})
+//     // }
+//         // const educatorId = req.auth.userId
+//         // const user = await User.findOne({ educatorId })
+//         // console.log('userData',user)
+//     const educatorId = req.auth.userId
+//     const user = await User.findOne({ educatorId })
+//     //   if (!user) {
+//     //         return res.json({success:false, message:'user not found'})
+//     // }
+//     //  res.json({success:true, user})
+// }
